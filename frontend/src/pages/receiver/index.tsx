@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
-import { ethers } from 'ethers'
 import InstitutionContract  from "../../contracts/insitution.json"
 import { ErrorMessage, Field, Formik } from "formik";
-import { InstitutionRegistrationSchema } from "../../models/institution/InstitutionRegistration.model";
+import { ReceiverRegistrationSchema } from '../../models/receiver/ReceiverRegistration.model';
+import { useState, useEffect } from 'react';
+import {ethers} from "ethers";
 
 declare global {
     interface Window {
@@ -10,10 +10,10 @@ declare global {
     }
   }
 
-export default function InstitutionRegistration() {
+export default function ReceiverRegistration() {
     const [address, setAddress] = useState("")
     let provider: ethers.BrowserProvider;
-    const contractAddress = "0x688d4fC40786Fa1E294901e970d1576D4D596f7c";
+    const contractAddress = "0xdE568E6e6cdc95eFb4D43E744570E1a925352808";
     const contractABI =  InstitutionContract.abi;
     let signer = null
      const connectWallet = async () => {
@@ -82,12 +82,12 @@ export default function InstitutionRegistration() {
             <div className="h-screen flex justify-center items-center bg-slate-800">
                 <div className="h-auto p-2 md:p-5 rounded-md shadow-lg bg-white ">
                     <div className="mb-8 ">
-                        <h1 className="text-lg font-bold text-center">Institution Registration</h1>
+                        <h1 className="text-lg font-bold text-center">Receiver Registration</h1>
                     </div>  
                     <div className="items-start">
                         <Formik
                         initialValues={{name: '', email: ''}}
-                        validationSchema={InstitutionRegistrationSchema}
+                        validationSchema={ReceiverRegistrationSchema}
                         onSubmit={(values) => 
                             console.log(values)
                         }
