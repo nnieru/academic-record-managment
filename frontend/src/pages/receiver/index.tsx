@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { CustomToast, ToastType } from '../../shared/components/toast';
 import { connectWallet } from '../../shared/helper/wallet';
+import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
 
 declare global {
   interface Window {
@@ -43,7 +44,7 @@ export default function ReceiverRegistration() {
       const tx = await contract.register(name, email);
 
       await tx.wait();
-    } catch (err) {
+    } catch (err: any) {
       throw web3ErrorHanlder(err.info.error);
     }
   };
