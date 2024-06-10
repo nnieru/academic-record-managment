@@ -1,154 +1,176 @@
-import { useEffect, useState } from "react"
-import { ethers } from 'ethers'
-import InstitutionContract  from "../../contracts/insitution.json"
-import { ErrorMessage, Field, Formik } from "formik";
-import { InstitutionRegistrationSchema } from "../../models/institution/InstitutionRegistration.model";
+import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+import InstitutionContract from '../../contracts/insitution.json';
+import { ErrorMessage, Field, Formik } from 'formik';
+import { InstitutionRegistrationSchema } from '../../models/institution/InstitutionRegistration.model';
+import { CustomToast, ToastType } from '../../shared/components/toast';
+import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
+import { connectWallet } from '../../shared/helper/wallet';
 
 declare global {
-    interface Window {
-      ethereum?: any;
-    }
+  interface Window {
+    ethereum?: any;
   }
+}
 
 export default function InstitutionRegistration() {
-    const [address, setAddress] = useState("")
-    let provider: ethers.BrowserProvider;
-    const contractAddress = "0x688d4fC40786Fa1E294901e970d1576D4D596f7c";
-    const contractABI =  InstitutionContract.abi;
-    let signer = null
-     const connectWallet = async () => {
-        
-        try {
-            if (typeof window.ethereum === 'undefined' || window.ethereum === null) {
-                throw new Error('No Ethereum wallet detected. Please install MetaMask.');
-            }
+  const [address, setAddress] = useState('');
+  const contractAddress = process.env.INSTITUTION_CONTRACT_ADDRESS ?? '';
+  const contractABI = InstitutionContract.abi;
 
-            // Request account access if needed
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const userAddress = await signer.getAddress();
+  const handleWalletConnection = async () => {};
+  connectWallet({
+    onSuccess(address, signer) {
+      setAddress(address);
+      signer = signer;
+    },
+    onError(error) {
+      CustomToast({ type: ToastType.ERROR, title: error.message });
+    },
+  });
 
-            // Set the address state
-            setAddress(userAddress);
-         
-        } catch (err) {
-            console.error(err);
-    
-        }
-    };
+  const handleRegister = async (name: string, email: string) => {
+    try {
+      if (!address) {
+        throw new Error('Please connect your wallet');
+      }
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+      const tx = await contract.register(name, email);
+      await tx.wait();
+    } catch (err: any) {
+      throw web3ErrorHanlder(err.info.error);
+    }
+  };
 
-    const handleRegister = async (e: any) => {
-        e.preventDefault()
+  useEffect(() => {
+    handleWalletConnection();
 
-        try {
-            if (!address) {
-                throw new Error('Please connect your wallet');
-            }
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const contract = new ethers.Contract(contractAddress, contractABI, signer);
-            const tx = await contract.register("testInstitution", "testInstitution@example.com");
-            
-            await tx.wait()
-            console.log('Transaction successful!');
-            console.log(`trainsaction hash: ${tx.hash}`);
-  
-        } catch (err) {
-            console.error(err);
-        }
-
+    if (window.ethereum) {
+      // Listen for account changes
+      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        setAddress(value => {
+          value = accounts[0];
+          return value;
+        });
+      });
     }
 
-    useEffect(() => {
-        connectWallet()
-        if (window.ethereum) {
-            // Listen for account changes
-            window.ethereum.on('accountsChanged', (accounts: string[]) => {
-                console.log(accounts);
-            });
-        }
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.off(
+          'accountsChanged',
+          function (accounts: string[]) {}
+        );
+      }
+    };
+  }, [address]);
 
-        return () => {
-            if (window.ethereum) {
-                window.ethereum.off('accountsChanged', function(accounts: string[]) {});
-            }
-        };
-    }, [address])
+  return (
+    <>
+      <div className="h-screen flex justify-center items-center bg-slate-800">
+        <div className="h-auto p-2 md:p-5 rounded-md shadow-lg bg-white ">
+          <div className="mb-8 ">
+            <h1 className="text-lg font-bold text-center">
+              Institution Registration
+            </h1>
+          </div>
+          <div className="items-start">
+            <Formik
+              initialValues={{ name: '', email: '' }}
+              validationSchema={InstitutionRegistrationSchema}
+              onSubmit={async (values, { setSubmitting, resetForm }) => {
+                setSubmitting(false);
+                try {
+                  await handleRegister(values.name, values.email);
+                  await CustomToast({
+                    type: ToastType.SUCCESS,
+                    title: 'Institution registered successfully',
+                  });
+                  resetForm();
+                } catch (err: any) {
+                  await CustomToast({ type: ToastType.ERROR, title: err });
+                }
+              }}
+            >
+              {({ isSubmitting, handleSubmit }) => (
+                <div>
+                  <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <div className="">
+                      <div className="md:flex justify-between items-center">
+                        <div className="w-32">
+                          <label htmlFor="name" className="">
+                            Name
+                          </label>
+                        </div>
+                        <div className="w-full">
+                          <Field
+                            name="name"
+                            type="text"
+                            className="border-b-2  p-1 w-full  focus:outline-none focus:border-b-2 focus:border-slate-950"
+                          />
+                        </div>
+                      </div>
 
-
-    return (
-        <>
-            <div className="h-screen flex justify-center items-center bg-slate-800">
-                <div className="h-auto p-2 md:p-5 rounded-md shadow-lg bg-white ">
-                    <div className="mb-8 ">
-                        <h1 className="text-lg font-bold text-center">Institution Registration</h1>
-                    </div>  
-                    <div className="items-start">
-                        <Formik
-                        initialValues={{name: '', email: ''}}
-                        validationSchema={InstitutionRegistrationSchema}
-                        onSubmit={(values) => 
-                            console.log(values)
-                        }
-                        >   
-                        {() => (
-                            <div>
-                                <form className="flex flex-col gap-4">
-                                   <div className="">
-                                    <div className="md:flex justify-between items-center">
-                                        <div className="w-32">W
-                                            <label htmlFor="name" className="">Name</label>
-                                        </div>
-                                            
-                                        <div className="w-full"> 
-                                            <Field name="name" type="text"  className="border-b-2  border-gray-500  p-1 w-full" />
-                                        </div>
-                                            
-                                        </div>
-
-                                        <div className="ml-[100px]">
-                                            <ErrorMessage name="name" component="div" className="text-red-600 text-start"/>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                    <div className="md:flex justify-between items-center">
-                                        <div className="w-32">
-                                            <label htmlFor="email" className="">Email</label>
-                                        </div>
-                                            
-                                        <div className="w-full"> 
-                                            <Field name="email" type="email"  className="border-2 border-gray-500 rounded p-1 w-full "/>
-                                        </div>
-                                            
-                                        </div>
-
-                                        <div className="ml-[100px]">
-                                            <ErrorMessage name="email" component="div" className="text-red-600 text-start"/>
-                                        </div>
-                                    </div>
-                                    
-                                   
-                                    <div className="w-full flex justify-center mt-7">
-                                        <button type="submit" className="text-white text-center   rounded-md bg-slate-900 py-3 w-1/2">Register</button>
-                                    </div>
-                                  
-                                    
-                                    
-                                </form>
-                            </div>
-                            
-                        )}
-                        </Formik>
-                    
+                      <div className="ml-[100px]">
+                        <ErrorMessage
+                          name="name"
+                          component="div"
+                          className="text-red-600 text-start"
+                        />
+                      </div>
                     </div>
-                    <div className="mt-6">
-                        <p>your address: {address}</p>
-                    </div>  
+
+                    <div>
+                      <div className="md:flex justify-between items-center">
+                        <div className="w-32">
+                          <label htmlFor="email" className="">
+                            Email
+                          </label>
+                        </div>
+
+                        <div className="w-full">
+                          <Field
+                            name="email"
+                            type="email"
+                            className="border-b-2 p-1 w-full focus:outline-none focus:border-b-2 focus:border-slate-950"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="ml-[100px]">
+                        <ErrorMessage
+                          name="email"
+                          component="div"
+                          className="text-red-600 text-start"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full flex justify-center mt-7">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2"
+                      >
+                        Register
+                      </button>
+                    </div>
+                  </form>
                 </div>
-            </div>
-            
-        </>
-    )
+              )}
+            </Formik>
+          </div>
+          <div className="mt-6">
+            <p>your address: {address}</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
