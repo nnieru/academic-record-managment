@@ -6,6 +6,7 @@ import { InstitutionRegistrationSchema } from '../../models/institution/Institut
 import { CustomToast, ToastType } from '../../shared/components/toast';
 import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
 import { connectWallet } from '../../shared/helper/wallet';
+import PageTitle from '../../shared/components/page_title';
 
 declare global {
   interface Window {
@@ -47,7 +48,7 @@ export default function InstitutionRegistration() {
       throw web3ErrorHanlder(err.info.error);
     }
   };
-
+  PageTitle('Institution Registration');
   useEffect(() => {
     handleWalletConnection();
 
@@ -74,7 +75,7 @@ export default function InstitutionRegistration() {
   return (
     <>
       <div className="h-screen flex justify-center items-center bg-slate-800">
-        <div className="h-auto p-2 md:p-5 rounded-md shadow-lg bg-white ">
+        <div className="h-auto p-2 md:p-5 rounded-md shadow-lg bg-white">
           <div className="mb-8 ">
             <h1 className="text-lg font-bold text-center">
               Institution Registration

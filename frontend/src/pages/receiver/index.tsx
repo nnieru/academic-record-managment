@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { CustomToast, ToastType } from '../../shared/components/toast';
 import { connectWallet } from '../../shared/helper/wallet';
 import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
+import PageTitle from '../../shared/components/page_title';
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ declare global {
 
 export default function ReceiverRegistration() {
   const [address, setAddress] = useState('');
-  const contractAddress = '0xdE568E6e6cdc95eFb4D43E744570E1a925352808';
+  const contractAddress = process.env.RECEIVER_CONTRACT_ADDRESS ?? '';
   const contractABI = InstitutionContract.abi;
 
   const handleWalletConnection = async () => {};
@@ -49,6 +50,7 @@ export default function ReceiverRegistration() {
     }
   };
 
+  PageTitle('Receiver Registration');
   useEffect(() => {
     handleWalletConnection();
     if (window.ethereum) {
