@@ -24,6 +24,32 @@ export default function MultipleForm() {
             Submit
           </button>
         </div>
+
+        {/* data table */}
+        <div className="flex rounded-lg">
+          <table className="table-auto w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400  ">
+              <tr>
+                <th>Title</th>
+                <th>Issue Date</th>
+                <th>Credential</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="whitespace-normal truncate">
+                  asdsadsadasdasdasdasd
+                </td>
+                <td className="whitespace-normal truncate">dsfdsfds</td>
+                <td className="whitespace-normal truncate">sdfdsf</td>
+                <td className="whitespace-normal truncate">
+                  asjdfkasjf jsafj asjf jsafj sakjdfjdafjdsfnf dsj jfdkgjksdfj
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

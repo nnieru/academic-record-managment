@@ -10,14 +10,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@helia/http": "^1.0.10",
+    "@helia/json": "^3.0.5",
+    "@helia/unixfs": "^3.0.7",
+    "@openzeppelin/merkle-tree": "^1.0.7",
     "@types/dotenv": "^8.2.0",
+    "blockstore-core": "^5.0.0",
     "dotenv": "^16.4.5",
     "formik": "^2.4.6",
+    "helia": "^4.2.5",
+    "ipfs-http-client": "^60.0.1",
+    "libp2p": "^1.9.4",
     "react": "^18.2.0",
     "react-data-table-component": "^7.6.2",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
+    "styled-components": "^6.1.13",
     "sweetalert2": "^11.11.1",
+    "xlsx": "^0.18.5",
     "yup": "^1.4.0"
   },
   "devDependencies": {
