@@ -76,6 +76,7 @@ export default function AddRecord() {
   };
 
   const uploadToIPFS = async () => {
+    let fileNames: string[] = [];
     try {
       const {
         proofs: treeResult,
@@ -83,13 +84,11 @@ export default function AddRecord() {
       }: { proofs: RecordModel[]; root: string } = generateMerkleTree();
       const fileArray = treeResult.map((row, _) => {
         const jsonData = JSON.stringify(row);
-        return new File(
-          [jsonData],
-          `data_${row.data.address}_${Date.now()}.json`,
-          {
-            type: 'application/json',
-          }
-        );
+        const fileName = `${row.data.address}_${Date.now()}`;
+        fileNames.push(fileName);
+        return new File([jsonData], `data_${fileName}.json`, {
+          type: 'application/json',
+        });
       });
 
       // 1. generate merkle tree
@@ -100,9 +99,15 @@ export default function AddRecord() {
           name: `${Date.now()}_record`,
         },
       });
-      handleIssueToBlockchain(root);
+      const cid = uploads.IpfsHash;
+      const salt = 'r3c0rd-m@nag3mentt012';
+      fileNames.forEach((fileName, _) => {
+        const credential = buildCredential(cid, fileName, salt);
+        console.log(credential);
+      });
+
+      // await handleIssueToBlockchain(root);
       console.log(uploads);
-      setData([]);
     } catch (error) {
       console.log(error);
     }
@@ -168,13 +173,38 @@ export default function AddRecord() {
         type: ToastType.SUCCESS,
         title: 'Record registered successfully',
       });
+      setData([]);
     } catch (err: any) {
       // throw web3ErrorHanlder(err.info.error);
       await CustomToast({ type: ToastType.ERROR, title: err });
     }
   };
 
-  const generateUserCredential = () => {};
+  const generateUserCredential = () => {
+    // credential cid|filename|salt
+  };
+
+  function buildCredential(cid: string, filename: string, salt: string) {
+    // Combine the inputs in the specified format
+    const combinedInput = `${cid}|${filename}|${salt}`;
+
+    // Encode the combined input in Base64
+    const base64Credential = btoa(combinedInput);
+    return base64Credential;
+  }
+
+  function decodeSecureCredential(base64Credential: string) {
+    try {
+      // Decode the Base64 string
+      const decodedInput = atob(base64Credential);
+      const [cid, filename, salt] = decodedInput.split('|');
+
+      // Return the original components
+      return { cid, filename, salt };
+    } catch (error) {
+      return null; // Return null if decoding fails
+    }
+  }
 
   const validate = () => {
     const isValid = StandardMerkleTree.verify(
@@ -198,6 +228,42 @@ export default function AddRecord() {
     console.log('isvalid: ', isValid);
   };
 
+  const fetchEvents = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const contract = new ethers.Contract(
+      contractAddress,
+      contractABI,
+      provider
+    );
+
+    // Set up the filter for the RecordIssued event
+    const filter = contract.filters.RecordIssued();
+
+    // Fetch the logs
+    const logs = await provider.getLogs({
+      ...filter,
+      fromBlock: 0, // Adjust the block range as needed
+      toBlock: 'latest',
+    });
+
+    // Parse the logs
+    const parsedEvents = logs.map(log => {
+      const parsedLog = contract.interface.parseLog(log);
+      return {
+        issuerAddress: parsedLog?.args._issuerAddress,
+        txHash: parsedLog?.args._txHash,
+      };
+    });
+    console.log(parsedEvents);
+  };
+
+  const decodeCred = () => {
+    console.log(
+      decodeSecureCredential(
+        'YmFmeWJlaWY1cXRkeWRjY3p2dXV3bmhkNTQ3YWxidXdwb2U3dnl5NmIzd3Q1dW12c2l0eGt1ZWh6cWl8MHhBMWIyRDNjNEU1ZjY3ODlBMUIyQzNENGU1RjY3ODlhQjJDM0Q0ZTVfMTcyNzE4ODkzNjA0NXxyM2MwcmQtbUBuYWczbWVudHQwMTI='
+      )
+    );
+  };
   return (
     <>
       <div className="bg-slate-800 h-screen w-full flex justify-center items-center">
@@ -258,6 +324,19 @@ export default function AddRecord() {
                 onClick={uploadToIPFS}
               >
                 Submit
+              </button>
+              <button
+                className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2 hover:bg-opacity-70"
+                onClick={fetchEvents}
+              >
+                get events
+              </button>
+
+              <button
+                className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2 hover:bg-opacity-70"
+                onClick={decodeCred}
+              >
+                deccode cred
               </button>
               <div className="h-96, overflow-auto">
                 <DataTable columns={columns} data={data} pagination />

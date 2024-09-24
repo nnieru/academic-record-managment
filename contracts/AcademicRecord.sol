@@ -17,7 +17,7 @@ contract AcademicRecord {
         require(!isRecordTxHashExist(_txHash), "Record Already exist");
         records[_txHash] = Record(msg.sender, _txHash);
         recordExists[_txHash] = true;
-        emit RecordIssued(msg.sender, "txHash");
+        emit RecordIssued(msg.sender, _txHash);
         
     }
 
