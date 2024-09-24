@@ -1,4 +1,5 @@
 {
-  "InstitutionModule#Institution": "0x7FFD26F8973Fe1Be46EE166E4da4310d4304F618",
-  "ReceiverModule#Receiver": "0x25B501F19BDcd85154A01A0F319131CD205C1476"
+  "AcademicRecordModule#AcademicRecord": "0x98E17D06A39C1244eA48a377Ae2F49d57e0279C2",
+  "ReceiverModule#Receiver": "0x2F790E6f1A7Af67EB71e746569f22eE39312A5E2",
+  "InstitutionModule#Institution": "0x70e3468c84599213cd3c294C6Bb90b3E8B67141E"
 }

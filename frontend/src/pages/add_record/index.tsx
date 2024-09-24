@@ -1,6 +1,9 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import PageTitle from '../../shared/components/page_title';
-
+import { ethers } from 'ethers';
+import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
+import { connectWallet } from '../../shared/helper/wallet';
+import AcademicRecordContract from '../../contracts/academicrecord.json';
 import * as XLSX from 'xlsx';
 
 import { DataRow } from '../../models/upload.model';
@@ -13,6 +16,7 @@ import {
   RecordItemModel,
   RecordModel,
 } from '../../models/add-record/ipfs_record.model';
+import { CustomToast, ToastType } from '../../shared/components/toast';
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.VITE_PINATA_JWT ?? '',
@@ -21,8 +25,45 @@ const pinata = new PinataSDK({
 
 export default function AddRecord() {
   const [data, setData] = useState<DataRow[]>([]);
+  const [address, setAddress] = useState('');
+  const contractAddress = process.env.ACADEMIC_RECORD_CONTRACT_ADDRESS ?? '';
+  const contractABI = AcademicRecordContract.abi;
 
   PageTitle('Add Record');
+
+  const handleWalletConnection = async () => {};
+  connectWallet({
+    onSuccess(address, signer) {
+      setAddress(address);
+      signer = signer;
+    },
+    onError(error) {
+      CustomToast({ type: ToastType.ERROR, title: error.message });
+    },
+  });
+
+  useEffect(() => {
+    handleWalletConnection();
+
+    if (window.ethereum) {
+      // Listen for account changes
+      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        setAddress(value => {
+          value = accounts[0];
+          return value;
+        });
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.off(
+          'accountsChanged',
+          function (accounts: string[]) {}
+        );
+      }
+    };
+  }, [address]);
 
   const uploadPinata = async () => {
     try {
@@ -36,7 +77,10 @@ export default function AddRecord() {
 
   const uploadToIPFS = async () => {
     try {
-      const treeResult: RecordModel[] = generateMerkleTree();
+      const {
+        proofs: treeResult,
+        root: root,
+      }: { proofs: RecordModel[]; root: string } = generateMerkleTree();
       const fileArray = treeResult.map((row, _) => {
         const jsonData = JSON.stringify(row);
         return new File(
@@ -56,8 +100,9 @@ export default function AddRecord() {
           name: `${Date.now()}_record`,
         },
       });
-
+      handleIssueToBlockchain(root);
       console.log(uploads);
+      setData([]);
     } catch (error) {
       console.log(error);
     }
@@ -90,7 +135,7 @@ export default function AddRecord() {
       'string',
       'string',
     ]);
-
+    const root = tree.root.toString();
     const proofs: RecordModel[] = leaves.map((_, index) => {
       const proof = tree.getProof(index);
       return {
@@ -101,10 +146,33 @@ export default function AddRecord() {
       };
     });
 
-    return proofs;
+    return { proofs, root };
   };
 
-  const issueToBlockchain = () => {};
+  const handleIssueToBlockchain = async (root: string) => {
+    try {
+      if (!address) {
+        throw new Error('Please connect your wallet');
+      }
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+      const tx = await contract.AddRecord(root);
+      await tx.wait();
+      await CustomToast({
+        type: ToastType.SUCCESS,
+        title: 'Record registered successfully',
+      });
+    } catch (err: any) {
+      // throw web3ErrorHanlder(err.info.error);
+      await CustomToast({ type: ToastType.ERROR, title: err });
+    }
+  };
 
   const generateUserCredential = () => {};
 
