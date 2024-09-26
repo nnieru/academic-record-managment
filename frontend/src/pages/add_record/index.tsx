@@ -75,12 +75,50 @@ export default function AddRecord() {
     }
   };
 
+  // const uploadToIPFS = async () => {
+  //   let fileNames: string[] = [];
+  //   try {
+  //     const {
+  //       proofs: treeResult,
+  //       root: root,
+  //     }: { proofs: RecordModel[]; root: string } = generateMerkleTree();
+  //     const fileArray = treeResult.map((row, _) => {
+  //       const jsonData = JSON.stringify(row);
+  //       const fileName = `${row.data.address}_${Date.now()}`;
+  //       fileNames.push(fileName);
+  //       return new File([jsonData], `data_${fileName}.json`, {
+  //         type: 'application/json',
+  //       });
+  //     });
+
+  //     // 1. generate merkle tree
+  //     // 2. upload to ipfs with pinata
+  //     // 3. generate user credential
+  //     const uploads = await pinata.upload.fileArray(fileArray, {
+  //       metadata: {
+  //         name: `${Date.now()}_record`,
+  //       },
+  //     });
+  //     const cid = uploads.IpfsHash;
+  //     const salt = 'r3c0rd-m@nag3mentt012';
+  //     fileNames.forEach((fileName, _) => {
+  //       const credential = buildCredential(cid, fileName, salt);
+  //       console.log(credential);
+  //     });
+
+  //     // await handleIssueToBlockchain(root);
+  //     console.log(uploads);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
   const uploadToIPFS = async () => {
     let fileNames: string[] = [];
     try {
       const {
         proofs: treeResult,
-        root: root,
+        root,
       }: { proofs: RecordModel[]; root: string } = generateMerkleTree();
       const fileArray = treeResult.map((row, _) => {
         const jsonData = JSON.stringify(row);
@@ -90,26 +128,27 @@ export default function AddRecord() {
           type: 'application/json',
         });
       });
-
-      // 1. generate merkle tree
-      // 2. upload to ipfs with pinata
-      // 3. generate user credential
+      await handleIssueToBlockchain(root);
       const uploads = await pinata.upload.fileArray(fileArray, {
         metadata: {
           name: `${Date.now()}_record`,
         },
       });
       const cid = uploads.IpfsHash;
-      const salt = 'r3c0rd-m@nag3mentt012';
-      fileNames.forEach((fileName, _) => {
-        const credential = buildCredential(cid, fileName, salt);
-        console.log(credential);
-      });
 
-      // await handleIssueToBlockchain(root);
-      console.log(uploads);
+      // Update data state with the generated cid
+      const salt = 'r3c0rd-m@nag3mentt012';
+      const updatedData = data.map((row, index) => {
+        const fileName = fileNames[index];
+        const credential = buildCredential(cid, fileName, salt);
+        return {
+          ...row,
+          cid: credential, // Assign the credential to the cid field
+        };
+      });
+      setData(updatedData); // Update the state with the new data including cid
     } catch (error) {
-      console.log(error);
+      console.log('err:', error);
     }
   };
 
@@ -175,13 +214,9 @@ export default function AddRecord() {
       });
       setData([]);
     } catch (err: any) {
-      // throw web3ErrorHanlder(err.info.error);
       await CustomToast({ type: ToastType.ERROR, title: err });
+      throw new Error(err);
     }
-  };
-
-  const generateUserCredential = () => {
-    // credential cid|filename|salt
   };
 
   function buildCredential(cid: string, filename: string, salt: string) {
@@ -265,86 +300,87 @@ export default function AddRecord() {
     );
   };
   return (
-    <>
-      <div className="bg-slate-800 h-screen w-full flex justify-center items-center">
-        <div className="w-1/2">
-          <div className="h-auto w-full mx-1 sm:w-auto xl:w-auto sm:p-5 rounded-md shadow-lg bg-white">
-            <div className="space-y-6">
-              <div className="flex-col m-2 sm:m-0">
-                <p className="font-medium mb-2">Form Type</p>
-              </div>
-            </div>
+    <div className="bg-slate-800 h-screen flex justify-center items-center overflow-auto">
+      <div className="w-1/2 space-y-4">
+        {/* Card for file input and actions */}
+        <div className="p-6 bg-white rounded-md shadow-lg space-y-4">
+          <div>
+            <p className="font-medium text-lg mb-4">Upload Record</p>
+            <input
+              className="block w-full p-2 border border-gray-300 rounded-md"
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = e => {
+                    const binaryStr = e.target?.result;
+                    if (binaryStr) {
+                      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+                      const sheetName = workbook.SheetNames[0];
+                      const sheet = workbook.Sheets[sheetName];
+                      const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-            <div className="flex flex-col gap-3">
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                      const binaryStr = e.target?.result;
-                      if (binaryStr) {
-                        const workbook = XLSX.read(binaryStr, {
-                          type: 'binary',
-                        });
-                        const sheetName = workbook.SheetNames[0];
-                        const sheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(sheet);
+                      const formattedData: DataRow[] = jsonData.map(
+                        (row: any) => ({
+                          title: row['Title'],
+                          issuedDate: row['Issue Date'],
+                          address: row['Address'],
+                          name: row['Name'],
+                          description: row['Description'],
+                        })
+                      );
+                      setData(formattedData);
+                    }
+                  };
+                  reader.readAsArrayBuffer(file);
+                }
+              }}
+            />
+            <a
+              href="../../../public/template/upload_record_template.xlsx"
+              download
+              className="text-blue-500 mt-2 text-sm underline block"
+            >
+              Download template
+            </a>
+          </div>
 
-                        const formattedData: DataRow[] = jsonData.map(
-                          (row: any, _) => {
-                            console.log(row['Title']);
-                            return {
-                              title: row['Title'],
-                              issuedDate: row['Issue Date'],
-                              address: row['Address'],
-                              name: row['Name'],
-                              description: row['Description'],
-                            };
-                          }
-                        );
-                        setData(formattedData);
-                      }
-                    };
-                    reader.readAsArrayBuffer(file);
-                  }
-                }}
-              />
-              <a
-                href="../../../public/template/upload_record_template.xlsx"
-                download
-                className="text-blue-500 text-right underline"
-              >
-                Download template
-              </a>
-              <button
-                className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2 hover:bg-opacity-70"
-                onClick={uploadToIPFS}
-              >
-                Submit
-              </button>
-              <button
-                className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2 hover:bg-opacity-70"
-                onClick={fetchEvents}
-              >
-                get events
-              </button>
+          <div className="flex justify-between">
+            <button
+              className="w-1/3 text-white bg-slate-900 py-2 rounded-md hover:bg-opacity-70"
+              onClick={uploadToIPFS}
+            >
+              Submit
+            </button>
 
-              <button
-                className="text-white text-center  rounded-md bg-slate-900 py-3 w-1/2 hover:bg-opacity-70"
-                onClick={decodeCred}
-              >
-                deccode cred
-              </button>
-              <div className="h-96, overflow-auto">
-                <DataTable columns={columns} data={data} pagination />
-              </div>
-            </div>
+            <button
+              className="w-1/3 text-white bg-slate-900 py-2 rounded-md hover:bg-opacity-70"
+              onClick={fetchEvents}
+            >
+              Get Events
+            </button>
+
+            <button
+              className="w-1/3 text-white bg-slate-900 py-2 rounded-md hover:bg-opacity-70"
+              onClick={decodeCred}
+            >
+              Decode Cred
+            </button>
+          </div>
+        </div>
+
+        {/* Card for displaying data */}
+        <div
+          className="p-6 bg-white rounded-md shadow-lg"
+          style={{ minWidth: '50%' }}
+        >
+          <div className="overflow-y-auto max-h-[50vh]">
+            <DataTable columns={columns} data={data} pagination />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
