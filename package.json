@@ -13,6 +13,7 @@
     "hardhat": "^2.22.4"
   },
   "dependencies": {
+    "hardhat-gas-reporter": "^2.2.1",
     "pinata-web3": "^0.4.1"
   }
 }

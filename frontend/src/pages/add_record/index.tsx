@@ -66,6 +66,7 @@ export default function AddRecord() {
   }, [address]);
 
   const uploadToIPFS = async () => {
+    // Start timing
     let fileNames: string[] = [];
     try {
       const {
@@ -81,12 +82,17 @@ export default function AddRecord() {
         });
       });
       await handleIssueToBlockchain(root);
+      const startTimeIPFSupload = Date.now();
       const uploads = await pinata.upload.fileArray(fileArray, {
         metadata: {
           name: `${Date.now()}_record`,
         },
       });
       const cid = uploads.IpfsHash;
+      const endTimeIPFSupload = Date.now();
+
+      const uploadTime = (endTimeIPFSupload - startTimeIPFSupload) / 1000; // Convert to seconds
+      console.log(`Upload time: ${uploadTime} seconds`);
 
       // Update data state with the generated cid
       const salt = 'r3c0rd-m@nag3mentt012';
@@ -105,6 +111,7 @@ export default function AddRecord() {
   };
 
   const generateMerkleTree = () => {
+    const startTime = Date.now();
     let temp_data: RecordItemModel[] = data.map(row => {
       return {
         title: row.title,
@@ -141,6 +148,9 @@ export default function AddRecord() {
         root: tree.root,
       };
     });
+    const endTime = Date.now();
+    const genreateMerkleTreeTime = (endTime - startTime) / 1000; // Convert to seconds
+    console.log(`Upload time: ${genreateMerkleTreeTime} seconds`);
 
     return { proofs, root };
   };
