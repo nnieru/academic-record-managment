@@ -3,7 +3,7 @@ import PageTitle from '../../shared/components/page_title';
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 import { CustomToast, ToastType } from '../../shared/components/toast';
 import { connectWallet } from '../../shared/helper/wallet';
-import AcademicRecordContract from '../../contracts/academicrecord.json';
+import AcademicRecordContract from '../../contracts/academicrecordv2.json';
 import { ethers } from 'ethers';
 
 export default function VerifyStatus() {

@@ -5,23 +5,23 @@ contract AcademicRecord {
  
  struct Record {
     address issuerAddress;
-    string txHash;
+    bytes32 txHash;
  }
 
-    mapping(string => Record) public records;
-    mapping(string => bool) private recordExists;
+    mapping(bytes32 => Record) public records;
+    mapping(bytes32 => bool) private recordExists;
 
-    event RecordIssued(address indexed _issuerAddress, string _txHash);
+    event RecordIssued(address indexed _issuerAddress, bytes32 _txHash);
 
-    function AddRecord(string memory _txHash) public {
-        require(!isRecordTxHashExist(_txHash), "Record Already exist");
+    function AddRecord(bytes32  _txHash) public {
+        require(!recordExists[_txHash], "Record Already exist");
         records[_txHash] = Record(msg.sender, _txHash);
         recordExists[_txHash] = true;
         emit RecordIssued(msg.sender, _txHash);
         
     }
 
-    function isRecordTxHashExist(string memory _addr) public view returns (bool) {
+    function isRecordTxHashExist(bytes32  _addr) public view returns (bool) {
         return recordExists[_addr];
     }
 }

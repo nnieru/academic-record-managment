@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 
 describe("AcademicRecord", function () {
   let AcademicRecord: any;
@@ -12,16 +12,12 @@ describe("AcademicRecord", function () {
   });
 
   it("should add a new record", async function () {
-    const tx = await academicRecord.AddRecord(
-      "0x922E479D9DC0E104666F423D24CE803A088E6CE9"
-    );
+    const tx = await academicRecord.AddRecord(ethers.randomBytes(32));
     await tx.wait();
   });
 
   it("verify a  new record, should return false if no exist", async function () {
-    const tx = await academicRecord.isRecordTxHashExist(
-      "0x922E479D9DC0E104666F423D24CE803A088E6CE9"
-    );
+    const tx = await academicRecord.isRecordTxHashExist(ethers.randomBytes(32));
 
     console.log(tx);
     // await tx.wait();

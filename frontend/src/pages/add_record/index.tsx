@@ -3,7 +3,7 @@ import PageTitle from '../../shared/components/page_title';
 import { ethers } from 'ethers';
 import { web3ErrorHanlder } from '../../shared/helper/errorHandler';
 import { connectWallet } from '../../shared/helper/wallet';
-import AcademicRecordContract from '../../contracts/academicrecord.json';
+import AcademicRecordContract from '../../contracts/academicrecordv2.json';
 import * as XLSX from 'xlsx';
 
 import { DataRow } from '../../models/upload.model';
