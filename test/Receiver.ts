@@ -26,11 +26,11 @@ describe("Receiver", function () {
 
     await receiver.register(name, email);
 
-    const institutionData = await receiver.institutions(signerAddress);
+    const receiverData = await receiver.receivers(signerAddress);
 
-    expect(institutionData.name).to.equal(name);
-    expect(institutionData.email).to.equal(email);
-    expect(institutionData.addr).to.equal(signerAddress);
+    expect(receiverData.name).to.equal(name);
+    expect(receiverData.email).to.equal(email);
+    expect(receiverData.addr).to.equal(signerAddress);
   });
 
   // it("should emit an event when receiver registration success", async function () {

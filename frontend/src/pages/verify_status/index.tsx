@@ -55,6 +55,7 @@ export default function VerifyStatus() {
   }, [address]);
 
   const handleVerify = async () => {
+    const startAllFunction = Date.now();
     setIsLoading(true);
     setNotFound(false);
     console.log('Credential:', credential);
@@ -100,6 +101,10 @@ export default function VerifyStatus() {
       setRecordData(null);
     }
     setIsLoading(false);
+
+    const endAllFunction = Date.now();
+    const allfucntionTIme = (endAllFunction - startAllFunction) / 1000; // Convert to seconds
+    console.log(`verification time: ${allfucntionTIme} seconds`);
   };
 
   const decodeCredential = (cred: string) => {

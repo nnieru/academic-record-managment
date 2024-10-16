@@ -67,6 +67,7 @@ export default function AddRecord() {
 
   const uploadToIPFS = async () => {
     // Start timing
+    const startAllFunction = Date.now();
     let fileNames: string[] = [];
     try {
       const {
@@ -92,7 +93,7 @@ export default function AddRecord() {
       const endTimeIPFSupload = Date.now();
 
       const uploadTime = (endTimeIPFSupload - startTimeIPFSupload) / 1000; // Convert to seconds
-      console.log(`Upload time: ${uploadTime} seconds`);
+      console.log(`ipfs time: ${uploadTime} seconds`);
 
       // Update data state with the generated cid
       const salt = 'r3c0rd-m@nag3mentt012';
@@ -108,6 +109,10 @@ export default function AddRecord() {
     } catch (error) {
       console.log('err:', error);
     }
+
+    const endAllFunction = Date.now();
+    const allfucntionTIme = (endAllFunction - startAllFunction) / 1000; // Convert to seconds
+    console.log(`Upload time: ${allfucntionTIme} seconds`);
   };
 
   const generateMerkleTree = () => {
@@ -117,7 +122,7 @@ export default function AddRecord() {
         title: row.title,
         issueDate: row.issuedDate,
         address: row.address,
-        issuerAddress: '0xxx',
+        issuerAddress: address,
         description: row.description,
         name: row.name,
       };
@@ -150,12 +155,13 @@ export default function AddRecord() {
     });
     const endTime = Date.now();
     const genreateMerkleTreeTime = (endTime - startTime) / 1000; // Convert to seconds
-    console.log(`Upload time: ${genreateMerkleTreeTime} seconds`);
+    console.log(`merkle tree time: ${genreateMerkleTreeTime} seconds`);
 
     return { proofs, root };
   };
 
   const handleIssueToBlockchain = async (root: string) => {
+    const startDate = Date.now();
     try {
       if (!address) {
         throw new Error('Please connect your wallet');
@@ -179,6 +185,9 @@ export default function AddRecord() {
       await CustomToast({ type: ToastType.ERROR, title: err });
       throw new Error(err);
     }
+    const endDate = Date.now();
+    const issueToBlockchainTime = (endDate - startDate) / 1000; // Convert to seconds
+    console.log(`issue to blockchain time: ${issueToBlockchainTime} seconds`);
   };
 
   function buildCredential(cid: string, filename: string, salt: string) {
