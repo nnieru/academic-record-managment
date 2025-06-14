@@ -76,6 +76,7 @@ export default function AddRecord() {
       }: { proofs: RecordModel[]; root: string } = generateMerkleTree();
       const fileArray = treeResult.map((row, _) => {
         const jsonData = JSON.stringify(row);
+        console.log(jsonData);
         const fileName = `${row.data.address}_${Date.now()}`;
         fileNames.push(fileName);
         return new File([jsonData], `data_${fileName}.json`, {

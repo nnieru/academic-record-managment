@@ -123,8 +123,9 @@ export default function VerifyStatus() {
   const fetchFromIPFS = async (cid: string, fileName: string) => {
     try {
       console.log(cid);
+      // https://salmon-absolute-silverfish-593.mypinata.cloud/ipfs/bafybeigvvysnyyin2ryeoardozfbehe3ymjvr2y4r6i66x7ultonwc2bbe/data_0x922E479D9DC0E104666F423D24CE803A088E6CE9_1732186983324.json
       var result = await fetch(
-        `https://ipfs.io/ipfs/${cid}/data_${fileName}.json`
+        `https://salmon-absolute-silverfish-593.mypinata.cloud/ipfs/${cid}/data_${fileName}.json`
       );
       return result;
     } catch (error) {
