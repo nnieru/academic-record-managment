@@ -6,13 +6,13 @@ const config: HardhatUserConfig = {
   solidity: "0.8.24",
   networks: {
     ganache: {
-      url: "http://127.0.0.1:7545",
+      url: "localhost",
       chainId: 1337,
     },
     sepolia: {
-      url: "https://eth-sepolia.g.alchemy.com/v2/w781dsB0TSA9_w3llC5off53YOLLEds6",
+      url: "https://eth-sepolia.g.alchemy.com/v2/",
       accounts: [
-        "a99f4660d343b6ee9c26f0972f19f603a632a3d79395b3abdeb506340a4816dd",
+        "",
       ],
     },
   },
